@@ -1,27 +1,26 @@
 ---
-title: "Homework 4"
-author: "Kort Alexander"
+title: "ESM 204 HW 4: Calculating the SCC and Policy Choice under Uncertainty"
+author: "Kort Alexander, Eva Wilson, Julia Wilson"
 date: "5/19/2022"
-output: html_document
+output: 
+  html_document:
+    theme: spacelab
+    code_folding: hide
 ---
 
-# Setup
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{r setup, include = FALSE, message = FALSE, warning = FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
 
 library(tidyverse)
 library(here)
 ```
-
-# Data input
 
 ```{r}
 damages <- read_csv(here("damages.csv"))
 warming <- read_csv(here("warming.csv"))
 ```
 
-# Question 1
+### 1. Estimate a quadratic damage function 
 
 ```{r}
 damages <- damages %>% 
@@ -35,10 +34,15 @@ damage_predictions <- tibble(warming_range, damage_predict)
 ggplot() +
   geom_point(data = damages, aes(x = warming, y = damages)) +
   geom_line(data = damage_predictions, aes(x = warming_range, y = damage_predict), color = "blue") +
-  labs(x = "Warming (degrees C)", y = "Damages ($)")
+  labs(x = "Warming (degrees C)", y = "Damages ($)", title = "Estimated damages (USD) per unit of additional warming (Celsius)") +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold")) +
+  theme(axis.title = element_text(face = "bold")) +
+  theme(strip.background = element_rect(color= "white", fill = "gray"))
 ```
 
-# Question 2
+***
+
+### 2. Predict damages under the baseline climate and the pulse scenario
 
 ```{r}
 damage_function <- function(warming) {
@@ -54,27 +58,41 @@ warming <- warming %>%
   mutate(difference_per_ton = (damage_function(warming_pulse) - damage_function(warming_baseline)) / 35000000000 )
 
 ggplot(warming, aes(x = year, y = damages_baseline)) +
-  geom_line() +
-  labs(x = "Year", y = "Damages ($)", title = "Baseline damages") +
-  theme_minimal()
+  geom_line(size = 1) +
+  labs(x = "Year", y = "Damages ($)", title = "Baseline damages ($)") +
+  theme_minimal(14) +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold")) +
+  theme(axis.title = element_text(face = "bold")) +
+  theme(strip.background = element_rect(color= "white", fill = "gray"))
 
 ggplot(warming, aes(x = year, y = damages_pulse)) +
-  geom_line() +
-  labs(x = "Year", y = "Damages ($)", title = "Damages with pulse") +
-  theme_minimal()
+  geom_line(size = 1) +
+  labs(x = "Year", y = "Damages ($)", title = "Damages ($) with pulse") +
+  theme_minimal(14) +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold")) +
+  theme(axis.title = element_text(face = "bold")) +
+  theme(strip.background = element_rect(color= "white", fill = "gray"))
 
 ggplot(warming, aes(x = year, y = difference)) +
-  geom_line() +
-  labs(x = "Year", y = "Damages ($)", title = "Difference in damages with pulse") +
-  theme_minimal()
+  geom_line(size = 1) +
+  labs(x = "Year", y = "Damages ($)", title = "Difference in damages ($) with pulse") +
+  theme_minimal(14) +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold")) +
+  theme(axis.title = element_text(face = "bold")) +
+  theme(strip.background = element_rect(color= "white", fill = "gray"))
 
 ggplot(warming, aes(x = year, y = difference_per_ton)) +
-  geom_line() +
-  labs(x = "Year", y = "Damages ($/tonCO2)", title = "Difference in damages with pulse") +
-  theme_minimal()
+  geom_line(size = 1) +
+  labs(x = "Year", y = "Damages ($/tonCO2)", title = "Difference in damages with pulse per ton of CO2") +
+  theme_minimal(14) +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold")) +
+  theme(axis.title = element_text(face = "bold")) +
+  theme(strip.background = element_rect(color= "white", fill = "gray"))
 ```
 
-# Question 3
+***
+
+### 3. Plot the SCC against reasonable discount rates
 
 ```{r}
 SCC_function <- function(r){
@@ -90,10 +108,14 @@ SCC <- map(discount_rate, SCC_function) %>% unlist()
 SCC_table <- tibble(discount_rate, SCC)
 
 ggplot(SCC_table, aes(x = discount_rate * 100, y = SCC)) +
-  geom_line() +
-  labs(x = "Discount rate (%)", y = "SCC ($/ton)") +
-  theme_minimal()
+  geom_line(size = 1) +
+  labs(x = "Discount rate (%)", y = "SCC ($/ton)", title = "Social cost of carbon per discount rate") +
+  theme_minimal(14) + 
+  theme(axis.title = element_text(face = "bold")) +
+  theme(strip.background = element_rect(color= "white", fill = "gray")) +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold")) 
 ```
 
 Higher discount rates result in a lower SCC; if future climate damages are discounted at a high rate, we would be placing less value on avoiding those damages today.
 
+***
