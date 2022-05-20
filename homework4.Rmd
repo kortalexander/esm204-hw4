@@ -5,26 +5,95 @@ date: "5/19/2022"
 output: html_document
 ---
 
+# Setup
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+library(here)
 ```
 
-## R Markdown
+# Data input
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
+```{r}
+damages <- read_csv(here("damages.csv"))
+warming <- read_csv(here("warming.csv"))
 ```
 
-## Including Plots
+# Question 1
 
-You can also embed plots, for example:
+```{r}
+damages <- damages %>% 
+  mutate(warming_sq = warming^2)
+damages_model <- lm(data = damages, damages ~ 0 + warming + warming_sq)
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+warming_range <- damages$warming
+damage_predict <- predict(damages_model, list(warming = warming_range, warming_sq = warming_range^2))
+damage_predictions <- tibble(warming_range, damage_predict)
+
+ggplot() +
+  geom_point(data = damages, aes(x = warming, y = damages)) +
+  geom_line(data = damage_predictions, aes(x = warming_range, y = damage_predict), color = "blue") +
+  labs(x = "Warming (degrees C)", y = "Damages ($)")
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+# Question 2
+
+```{r}
+damage_function <- function(warming) {
+  damages <- damages_model$coefficients[1] * warming + damages_model$coefficients[2] * (warming^2)
+  return(damages)
+}
+```
+
+```{r}
+warming <- warming %>% 
+  mutate(damages_baseline = damage_function(warming_baseline), damages_pulse = damage_function(warming_pulse)) %>% 
+  mutate(difference = damage_function(warming_pulse) - damage_function(warming_baseline)) %>% 
+  mutate(difference_per_ton = (damage_function(warming_pulse) - damage_function(warming_baseline)) / 35000000000 )
+
+ggplot(warming, aes(x = year, y = damages_baseline)) +
+  geom_line() +
+  labs(x = "Year", y = "Damages ($)", title = "Baseline damages") +
+  theme_minimal()
+
+ggplot(warming, aes(x = year, y = damages_pulse)) +
+  geom_line() +
+  labs(x = "Year", y = "Damages ($)", title = "Damages with pulse") +
+  theme_minimal()
+
+ggplot(warming, aes(x = year, y = difference)) +
+  geom_line() +
+  labs(x = "Year", y = "Damages ($)", title = "Difference in damages with pulse") +
+  theme_minimal()
+
+ggplot(warming, aes(x = year, y = difference_per_ton)) +
+  geom_line() +
+  labs(x = "Year", y = "Damages ($/tonCO2)", title = "Difference in damages with pulse") +
+  theme_minimal()
+```
+
+# Question 3
+
+```{r}
+SCC_function <- function(r){
+  sum <- 0
+  for(i in seq(1, 79, 1)){
+    sum <- sum + (warming[i, 8] / (1 + r)^i)
+  }
+  return(sum)
+}
+
+discount_rate <- seq(0, 0.1, 0.0025)
+SCC <- map(discount_rate, SCC_function) %>% unlist()
+SCC_table <- tibble(discount_rate, SCC)
+
+ggplot(SCC_table, aes(x = discount_rate * 100, y = SCC)) +
+  geom_line() +
+  labs(x = "Discount rate (%)", y = "SCC ($/ton)") +
+  theme_minimal()
+```
+
+Higher discount rates result in a lower SCC; if future climate damages are discounted at a high rate, we would be placing less value on avoiding those damages today.
+
