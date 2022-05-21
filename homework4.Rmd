@@ -119,3 +119,93 @@ ggplot(SCC_table, aes(x = discount_rate * 100, y = SCC)) +
 Higher discount rates result in a lower SCC; if future climate damages are discounted at a high rate, we would be placing less value on avoiding those damages today.
 
 ***
+
+### 4. SCC calculation based on Ramsey Rule
+
+```{r}
+r_ramsey <- 0.001 + (2 * 0.01)
+SCC_ramsey <- SCC_function(r_ramsey)
+r_ramsey
+SCC_ramsey
+
+ggplot(SCC_table, aes(x = discount_rate * 100, y = SCC)) +
+  geom_line(size = 1) +
+  geom_point(aes(x = 0.021 * 100, y = 69.88626), color = "red", size = 4) +
+  labs(x = "Discount rate (%)", y = "SCC ($/ton)", title = "Social cost of carbon per discount rate") +
+  theme_minimal(14) + 
+  theme(axis.title = element_text(face = "bold")) +
+  theme(strip.background = element_rect(color= "white", fill = "gray")) +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold")) 
+```
+
+***
+
+### 5. 
+
+```{r}
+PV_baseline_damages <- function(r){
+  sum <- 0
+  for(i in seq(1, 79, 1)){
+    sum <- sum + (warming[i, 5] / (1 + r)^i)
+  }
+  return(sum)
+}
+
+damages_polA_warming <- map(warming$warming_baseline * 1.5, damage_function) %>% unlist()
+warming$damages_polA_warming <- damages_polA_warming
+
+PV_polA_damages <- function(r){
+  sum <- 0
+  for(i in seq(1, 79, 1)){
+    sum <- sum + (warming[i, 9] / (1 + r)^i)
+  }
+  return(sum)
+}
+
+policy_A_exp_damages <- function(r){
+  exp_damages <- 0.5 * (PV_baseline_damages(r)) + 0.5 * (PV_polA_damages(r))
+  return(exp_damages)
+}
+
+cost_policy_A <- policy_A_exp_damages(0.02) %>% unlist()
+cost_policy_A
+
+warming <- warming %>% 
+  mutate(warming_polB = ifelse(year <= 2050, warming_baseline, 1.29)) %>% 
+  mutate(damages_polB = damage_function(warming_polB))
+
+PV_polB_damages <- function(r){
+  sum <- 0
+  for(i in seq(1, 79, 1)){
+    sum <- sum + (warming[i, 12] / (1 + r)^i)
+  }
+  return(sum)
+}
+
+cost_policy_B <- function(x){
+  cost <- x + PV_polB_damages(0.02)
+  return(cost)
+}
+
+cost_table <- tibble(imp_cost = seq(0, 5e15, 1e13))
+cost_table$polA_cost <- cost_policy_A
+polB_cost = map(cost_table$imp_cost, cost_policy_B) %>% unlist()
+cost_table$polB_cost <- polB_cost 
+
+cost_table <- cost_table %>% 
+  pivot_longer(cols = polA_cost:polB_cost, names_to = "policy", values_to = "cost")
+
+ggplot(cost_table, aes(x = imp_cost, y = cost, color = policy)) +
+  geom_line(size = 1) +
+  labs(x = "Implementation cost", y = "Total cost ($)", color = "Policy", title = "Total policy cost by implementation cost") +
+  theme_minimal(14) + 
+  theme(axis.title = element_text(face = "bold")) +
+  theme(strip.background = element_rect(color= "white", fill = "gray")) +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold")) 
+```
+
+Policy B is recommended if implementation cost is less than 2.19 quadrillion dollars. If the cost exceeds 2.19 quadrillion dollars, policy A is recommended.
+
+### 6. 
+
+If society is risk-averse, policy B will be more attractive because the expected utility cost of policy A will be greater than just the expected monetary cost.
