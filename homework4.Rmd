@@ -177,7 +177,7 @@ warming <- warming %>%
 PV_polB_damages <- function(r){
   sum <- 0
   for(i in seq(1, 79, 1)){
-    sum <- sum + (warming[i, 12] / (1 + r)^i)
+    sum <- sum + (warming[i, 11] / (1 + r)^i)
   }
   return(sum)
 }
