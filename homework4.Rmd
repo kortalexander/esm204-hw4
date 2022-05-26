@@ -208,4 +208,4 @@ Policy B is recommended if implementation cost is less than 2.19 quadrillion dol
 
 ### 6. 
 
-If society is risk-averse, policy B will be more attractive because the expected utility cost of policy A will be greater than just the expected monetary cost.
+If society is risk-averse, policy B will be more attractive because the expected utility cost of policy A will be go up because of the uncertainty involved. Policy B will be the better option for a greater range of implementation costs.
