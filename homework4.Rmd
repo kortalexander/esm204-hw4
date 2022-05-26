@@ -116,23 +116,27 @@ ggplot(SCC_table, aes(x = discount_rate * 100, y = SCC)) +
   theme(plot.title = element_text(hjust = 0.5, face = "bold")) 
 ```
 
-Higher discount rates result in a lower SCC; if future climate damages are discounted at a high rate, we would be placing less value on avoiding those damages today.
+**Interpretation:** Higher discount rates result in a lower SCC; if future climate damages are discounted at a high rate, we would be placing less value on avoiding those damages today.
 
 ***
 
 ### 4. SCC calculation based on Ramsey Rule
 
-```{r}
+```{r include = FALSE}
 r_ramsey <- 0.001 + (2 * 0.01)
 SCC_ramsey <- SCC_function(r_ramsey)
 r_ramsey
 SCC_ramsey
+```
 
+```{r}
+# plot results
 ggplot(SCC_table, aes(x = discount_rate * 100, y = SCC)) +
   geom_line(size = 1) +
   geom_point(aes(x = 0.021 * 100, y = 69.88626), color = "red", size = 4) +
   labs(x = "Discount rate (%)", y = "SCC ($/ton)", title = "Social cost of carbon per discount rate") +
   theme_minimal(14) + 
+  annotate("text", x = 3.15, y = 77, label = "Highlighted SCC") +
   theme(axis.title = element_text(face = "bold")) +
   theme(strip.background = element_rect(color= "white", fill = "gray")) +
   theme(plot.title = element_text(hjust = 0.5, face = "bold")) 
@@ -140,9 +144,9 @@ ggplot(SCC_table, aes(x = discount_rate * 100, y = SCC)) +
 
 ***
 
-### 5. 
+### 5. Consider two possible climate scenarios
 
-```{r}
+```{r include = FALSE}
 PV_baseline_damages <- function(r){
   sum <- 0
   for(i in seq(1, 79, 1)){
@@ -194,18 +198,21 @@ cost_table$polB_cost <- polB_cost
 
 cost_table <- cost_table %>% 
   pivot_longer(cols = polA_cost:polB_cost, names_to = "policy", values_to = "cost")
+```
 
+```{r}
+#plot results
 ggplot(cost_table, aes(x = imp_cost, y = cost, color = policy)) +
   geom_line(size = 1) +
-  labs(x = "Implementation cost", y = "Total cost ($)", color = "Policy", title = "Total policy cost by implementation cost") +
+  labs(x = "Implementation Cost ($)", y = "Total Cost ($)", color = "Policy", title = "Total policy cost by implementation cost") +
   theme_minimal(14) + 
   theme(axis.title = element_text(face = "bold")) +
   theme(strip.background = element_rect(color= "white", fill = "gray")) +
   theme(plot.title = element_text(hjust = 0.5, face = "bold")) 
 ```
 
-Policy B is recommended if implementation cost is less than 2.19 quadrillion dollars. If the cost exceeds 2.19 quadrillion dollars, policy A is recommended.
+**Advice to Congress:** We recommend Policy B if the implementation cost is less than 2.19 quadrillion dollars. If the cost exceeds 2.19 quadrillion dollars, we recommend Policy A.
 
-### 6. 
+### 6. Evaluating climate policies under a risk-averse scenario
 
-If society is risk-averse, policy B will be more attractive because the expected utility cost of policy A will be go up because of the uncertainty involved. Policy B will be the better option for a greater range of implementation costs.
+**Advice to Congress:** If society is risk-averse, Policy B will be more attractive. This is because the expected utility cost of Policy A will increase because of the uncertainty involved. Policy B will be the better option for a greater range of implementation costs.
